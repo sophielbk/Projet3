@@ -1,0 +1,13 @@
+# Dépendances et builds (reconstruits par Docker)
+node_modules/
+dist/
+
+# Bases locales / volumes
+data/
+*.db
+*.sqlite
+
+# Divers
+*.log
+.env
+.DS_Store

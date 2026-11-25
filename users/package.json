@@ -1,0 +1,15 @@
+{
+  "name": "ridenow-users",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "RideNow — service Users (passagers, chauffeurs, disponibilité)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "ridenow-gateway",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "RideNow — gateway (porte d'entrée unique, proxy REST + UI)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

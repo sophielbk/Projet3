@@ -1,0 +1,95 @@
+name: ridenow
+
+# ──────────────────────────────────────────────────────────────────────────────
+# RideNow — architecture microservices (MGL7361, Projet 3)
+#
+# Cinq conteneurs. Chaque service métier possède SA propre base SQLite, dans SON
+# propre volume : aucune base n'est partagée (exigence de l'énoncé). Les services
+# ne se parlent QUE par REST/JSON, via le DNS interne de Docker Compose
+# (le nom du service = son hôte, ex. http://pricing:3000).
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ─── Service Users (Identity) ───────────────────────────────────────────────
+  # Possède : passagers, chauffeurs, disponibilité. Base : users.db
+  users:
+    build: ./users
+    environment:
+      PORT: 3000
+    volumes:
+      - users-data:/app/data
+    ports:
+      - "3011:3000"          # exposé pour tests directs (curl)
+    restart: unless-stopped
+
+  # ─── Service Pricing ────────────────────────────────────────────────────────
+  # Possède : la grille de prix par (zone_départ, zone_arrivée). Base : pricing.db
+  pricing:
+    build: ./pricing
+    environment:
+      PORT: 3000
+    volumes:
+      - pricing-data:/app/data
+    ports:
+      - "3012:3000"
+    restart: unless-stopped
+
+  # ─── Service Payment (mock) ─────────────────────────────────────────────────
+  # Possède : les paiements (authorize/capture simulés). Base : payments.db
+  payment:
+    build: ./payment
+    environment:
+      PORT: 3000
+    volumes:
+      - payment-data:/app/data
+    ports:
+      - "3014:3000"
+    restart: unless-stopped
+
+  # ─── Service Ride (orchestrateur de la saga) ────────────────────────────────
+  # Possède : le cycle de vie des courses. Base : rides.db
+  # C'est LUI qui appelle pricing + users (+ payment à l'étape 2).
+  ride:
+    build: ./ride
+    environment:
+      PORT: 3000
+      PRICING_URL: http://pricing:3000
+      USERS_URL: http://users:3000
+      PAYMENT_URL: http://payment:3000
+      CALL_TIMEOUT_MS: 3000
+    depends_on:
+      - pricing
+      - users
+      - payment
+    volumes:
+      - rides-data:/app/data
+    ports:
+      - "3013:3000"
+    restart: unless-stopped
+
+  # ─── Gateway (porte d'entrée unique) ────────────────────────────────────────
+  # Point d'entrée nord-sud : proxifie /api/* vers le bon service et journalise
+  # chaque appel (utile pour la vidéo). Ne détient aucune donnée.
+  gateway:
+    build: ./gateway
+    environment:
+      PORT: 8080
+      USERS_URL: http://users:3000
+      PRICING_URL: http://pricing:3000
+      RIDE_URL: http://ride:3000
+      PAYMENT_URL: http://payment:3000
+    depends_on:
+      - users
+      - pricing
+      - ride
+      - payment
+    ports:
+      - "8090:8080"          # hôte 8090 (évite un conflit sur 8080), conteneur 8080
+    restart: unless-stopped
+
+# Un volume nommé par service : la persistance est locale ET isolée.
+volumes:
+  users-data:
+  pricing-data:
+  payment-data:
+  rides-data:

@@ -1,0 +1,15 @@
+{
+  "name": "ridenow-payment",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "RideNow — service Payment (mock : authorize / capture)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "express": "^4.21.2"
+  }
+}
